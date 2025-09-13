@@ -10,23 +10,22 @@ export function isSegmenterSupported() {
 
 /**
  * Segment text in the given HTML content using Intl.Segmenter.
+ * @param {HTMLElement} htmlElement Target HTML element
  * @param {string} htmlContent HTML content to segment
  * @param {'word'|'grapheme'|'sentence'} [granularity='word'] Text split granularity
- * @returns {string} HTML content with segmentation classes applied
  */
-export function segmentTextInContent(htmlContent, granularity = 'word') {
+export function segmentTextInElement(htmlElement, htmlContent, granularity = 'word') {
     if (!isSegmenterSupported()) {
-        return htmlContent;
+        return;
     }
 
     // TODO: Support more locales, make granularity configurable.
     const segmenter = new Intl.Segmenter('en-US', { granularity });
 
-    const element = document.createElement('div');
-    element.innerHTML = htmlContent;
+    htmlElement.innerHTML = htmlContent;
 
     const textNodes = [];
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(htmlElement, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
         const textNode = /** @type {Text} */ (walker.currentNode);
 
@@ -52,8 +51,6 @@ export function segmentTextInContent(htmlContent, granularity = 'word') {
         }
         textNode.replaceWith(fragment);
     }
-
-    return element.innerHTML;
 }
 
 /**
@@ -62,8 +59,7 @@ export function segmentTextInContent(htmlContent, granularity = 'word') {
  * @param {string} htmlContent New HTML content to apply
  */
 export function applyStreamFadeIn(messageTextElement, htmlContent) {
-    const targetContent = segmentTextInContent(htmlContent);
     const targetElement = /** @type {HTMLElement} */ (messageTextElement.cloneNode());
-    targetElement.innerHTML = targetContent;
+    segmentTextInElement(targetElement, htmlContent);
     morphdom(messageTextElement, targetElement);
 }
